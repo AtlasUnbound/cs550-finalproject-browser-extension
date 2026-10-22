@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrintShield Dashboard</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <img src="../icons/icon-48.png" alt="PrintShield Logo" class="brand-icon" width="28" height="28">
+      <div>
+        <h1 class="brand-title">PrintShield</h1>
+        <p class="brand-subtitle" id="active-domain">Inspecting current tab...</p>
+      </div>
+    </div>
+    <button id="open-sandbox-btn" class="sandbox-btn" title="Open interactive fingerprinting test page">
+      Test Lab
+    </button>
+  </header>
+
+  <!-- Dynamic Visual Privacy Metric (Task 1 & Task 3) -->
+  <section class="metric-card" aria-label="Privacy Protection Metric">
+    <div class="metric-ring-container">
+      <svg class="metric-ring" width="84" height="84" viewBox="0 0 84 84">
+        <circle class="metric-ring-bg" cx="42" cy="42" r="35" stroke-width="8" fill="none"></circle>
+        <circle id="metric-ring-progress" class="metric-ring-fill" cx="42" cy="42" r="35" stroke-width="8" fill="none"
+          stroke-dasharray="219.91" stroke-dashoffset="219.91"></circle>
+      </svg>
+      <div class="metric-score-text">
+        <span id="score-value">0</span><span class="score-percent">%</span>
+      </div>
+    </div>
+
+    <div class="metric-details">
+      <div class="metric-status-row">
+        <span class="metric-label">Footprint Protection</span>
+        <span id="protection-badge" class="status-pill status-low">High Exposure</span>
+      </div>
+      <p id="metric-explanation" class="metric-desc">
+        Your browser currently shares unique hardware and rendering signatures with websites.
+      </p>
+      <div class="quick-actions">
+        <button id="protect-all-btn" class="action-btn primary-btn">Enable Recommended Shield</button>
+        <button id="reset-all-btn" class="action-btn ghost-btn">Reset</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Study Guidance Banner -->
+  <div class="study-tip" role="note">
+    <span class="study-tip-icon">💡</span>
+    <span><strong>How to use:</strong> Click <em>"Why this matters"</em> on any vector to learn how trackers identify you, or toggle protection on.</span>
+  </div>
+
+  <!-- Fingerprinting Vectors List (Task 1, Task 2, Task 3) -->
+  <main class="vectors-section">
+    <div class="section-header">
+      <h2>Fingerprinting Vectors</h2>
+      <span id="detected-summary" class="detected-counter">0 active on page</span>
+    </div>
+
+    <div id="vectors-container" class="vectors-list">
+      <!-- Populated dynamically by popup.js -->
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <span>CS-550 Privacy Research Project</span>
+    <span id="reload-notice" class="reload-notice" hidden>Reload tab to apply changes cleanly</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

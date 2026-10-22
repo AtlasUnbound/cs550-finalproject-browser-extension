@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "PrintShield: Digital Fingerprint Visualizer & Mitigator",
+  "version": "1.0.0",
+  "description": "An educational privacy tool that visualizes browser fingerprinting vectors, explains tracking risks, and provides easy mitigations.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "PrintShield — Inspect & Protect Digital Footprint"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/bridge.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["content/protector-main.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

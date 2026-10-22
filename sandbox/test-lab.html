@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrintShield Study Test Lab — CS-550</title>
+  <link rel="stylesheet" href="test-lab.css">
+</head>
+<body>
+  <div class="lab-container">
+    <header class="lab-header">
+      <div>
+        <span class="course-badge">CS-550 User Study Environment</span>
+        <h1>Digital Fingerprinting Interactive Test Lab</h1>
+        <p class="subtitle">
+          Compare what websites and trackers can see about your browser <strong>before</strong> and <strong>after</strong> enabling PrintShield mitigations.
+        </p>
+      </div>
+      <div class="header-actions">
+        <button id="run-all-probes" class="btn primary-btn">Run All Fingerprint Probes</button>
+      </div>
+    </header>
+
+    <section class="instructions-banner">
+      <h2>📋 Study Walkthrough Steps</h2>
+      <ol>
+        <li><strong>Task 1 (Inspect):</strong> Click <em>"Run All Fingerprint Probes"</em> below, then open the <strong>PrintShield extension popup</strong> in your browser toolbar to see which vectors were detected.</li>
+        <li><strong>Task 2 (Learn):</strong> In the extension popup, click <em>"Why this matters"</em> on the vectors to read what information they reveal.</li>
+        <li><strong>Task 3 (Mitigate & Compare):</strong> Toggle the mitigations ON in the popup, observe your updated <strong>Footprint Protection Score</strong>, and click <em>"Run All Fingerprint Probes"</em> again here to see how your digital signature changes!</li>
+      </ol>
+    </section>
+
+    <div class="grid">
+      <!-- Priority Vector 1: Canvas 2D Fingerprinting -->
+      <article class="lab-card priority-card">
+        <div class="card-header">
+          <div>
+            <span class="focus-pill">Core Vector #1</span>
+            <h3>Canvas 2D Fingerprint Probe</h3>
+          </div>
+          <button id="probe-canvas-btn" class="btn secondary-btn">Probe Canvas</button>
+        </div>
+        <p class="card-desc">
+          Trackers draw hidden text, gradients, and emojis onto an HTML5 Canvas and extract the raw pixel data via <code>canvas.toDataURL()</code> to compute a hardware-specific hash.
+        </p>
+        <div class="canvas-preview-wrap">
+          <canvas id="fp-canvas" width="280" height="60"></canvas>
+        </div>
+        <div class="readout-box">
+          <div class="readout-row">
+            <span class="label">Extracted Hash:</span>
+            <code id="canvas-hash-out" class="value highlight">Not probed yet</code>
+          </div>
+          <div class="readout-row">
+            <span class="label">Protection Status:</span>
+            <span id="canvas-status-out" class="value">—</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Priority Vector 2: User-Agent & Navigator Hardware -->
+      <article class="lab-card priority-card">
+        <div class="card-header">
+          <div>
+            <span class="focus-pill">Core Vector #2</span>
+            <h3>User-Agent &amp; Navigator Probe</h3>
+          </div>
+          <button id="probe-ua-btn" class="btn secondary-btn">Probe Navigator</button>
+        </div>
+        <p class="card-desc">
+          Trackers query <code>navigator.userAgent</code>, <code>hardwareConcurrency</code>, <code>deviceMemory</code>, and <code>platform</code> to profile your OS and CPU/RAM configuration.
+        </p>
+        <div class="readout-box">
+          <div class="readout-row">
+            <span class="label">User-Agent:</span>
+            <code id="ua-string-out" class="value small-code">Not probed yet</code>
+          </div>
+          <div class="readout-row">
+            <span class="label">Platform / OS:</span>
+            <code id="ua-platform-out" class="value">—</code>
+          </div>
+          <div class="readout-row">
+            <span class="label">CPU Cores &amp; RAM:</span>
+            <code id="ua-hw-out" class="value">—</code>
+          </div>
+          <div class="readout-row">
+            <span class="label">Languages:</span>
+            <code id="ua-lang-out" class="value">—</code>
+          </div>
+        </div>
+      </article>
+
+      <!-- Vector 3: WebGL GPU Renderer -->
+      <article class="lab-card">
+        <div class="card-header">
+          <h3>WebGL GPU Hardware Probe</h3>
+          <button id="probe-webgl-btn" class="btn secondary-btn">Probe WebGL</button>
+        </div>
+        <p class="card-desc">
+          Queries <code>UNMASKED_VENDOR_WEBGL</code> and <code>UNMASKED_RENDERER_WEBGL</code> to identify your exact graphics card model.
+        </p>
+        <div class="readout-box">
+          <div class="readout-row">
+            <span class="label">GPU Vendor:</span>
+            <code id="webgl-vendor-out" class="value">Not probed yet</code>
+          </div>
+          <div class="readout-row">
+            <span class="label">GPU Renderer:</span>
+            <code id="webgl-renderer-out" class="value small-code">—</code>
+          </div>
+        </div>
+      </article>
+
+      <!-- Vector 4 & 5: AudioContext & Font Metrics -->
+      <article class="lab-card">
+        <div class="card-header">
+          <h3>Web Audio &amp; Font Metrics Probe</h3>
+          <button id="probe-other-btn" class="btn secondary-btn">Probe Audio &amp; Fonts</button>
+        </div>
+        <p class="card-desc">
+          Generates an inaudible audio buffer and measures text bounding boxes across font families to detect audio stack and installed font signatures.
+        </p>
+        <div class="readout-box">
+          <div class="readout-row">
+            <span class="label">Audio Sample Sum:</span>
+            <code id="audio-hash-out" class="value">Not probed yet</code>
+          </div>
+          <div class="readout-row">
+            <span class="label">Font Width Signature:</span>
+            <code id="font-metrics-out" class="value">—</code>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <!-- Inject the same bridge + main-world protector so this extension page can also demonstrate live spoofing -->
+  <script src="../content/bridge.js"></script>
+  <script src="test-lab.js"></script>
+</body>
+</html>

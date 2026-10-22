@@ -1,0 +1,19 @@
+# OS & Editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Dependencies & Build artifacts
+node_modules/
+dist/
+build/
+*.crx
+*.pem
+*.zip
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
