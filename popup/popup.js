@@ -61,10 +61,10 @@ const VECTORS_METADATA = [
     whyItMatters:
       'GPU strings and limits vary a lot between machines and are often unique when combined. A made-up name like "Generic GPU" backfires, because no real computer reports it.',
     howMitigationWorks:
-      'Reports a very common real GPU from the same brand as yours, caps hardware limits at common values, hides rare extensions and adds invisible noise to read-back 3D images.',
-    siteImpact: 'Low: 3D sites still work. Very advanced WebGL apps may lose rare features.',
+      'Reports the most common real GPU string (on Windows: Microsoft\'s built-in "Basic Render Driver", used by virtual machines, remote desktops and PCs without GPU acceleration), caps hardware limits at common values, hides rare extensions and adds invisible noise to read-back 3D images.',
+    siteImpact: 'Low: 3D sites still work. Very advanced WebGL apps may lose rare features, and some anti-bot checks may ask for a CAPTCHA more often.',
     cantHide:
-      'WebGL parameters and the extension list come from your browser version and real graphics hardware. PrintShield caps the limits and hides rare extensions, but it cannot add features your GPU lacks, so this can stay uncommon. "WebGL Data" is a rendered image, randomized like canvas, so test sites list it as unique even though it cannot be linked. No public dataset gives exact GPU shares, so PrintShield reports the most widespread Intel laptop GPU without its model-specific device ID.'
+      'WebGL parameters and the extension list come from your browser version and real graphics hardware. PrintShield caps the limits and hides rare extensions, but it cannot add features your GPU lacks, so this can stay uncommon. "WebGL Data" is a rendered image, randomized like canvas, so test sites list it as unique even though it cannot be linked. On Cover Your Tracks the Basic Render Driver string is shared by about 1 in 114 browsers, compared with 1 in 490 for the most common Intel laptop GPU. A few anti-bot services treat software rendering as a hint of automation and may show an extra CAPTCHA; turn this shield off on such a site if that happens.'
   },
   {
     id: 'screen',

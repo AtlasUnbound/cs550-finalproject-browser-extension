@@ -729,11 +729,15 @@
   ]);
 
   /**
-   * Map the real GPU to a very common REAL GPU string of the same vendor family, in
-   * the exact format current Chrome uses (including the PCI device id). Measured on
-   * Cover Your Tracks: the UHD 620 string with its device id was shared by 1 in 490
-   * browsers; the same string without the id (a format current Chrome no longer
-   * produces) by only 1 in 3,387.
+   * Map the real GPU to a very common REAL GPU string, in the exact format current
+   * Chrome uses. Measured on Cover Your Tracks:
+   *   Windows "Microsoft Basic Render Driver" (WARP, the built-in D3D11 software
+   *     renderer used by VMs, remote desktop and machines without GPU acceleration):
+   *     1 in 114 browsers.
+   *   Intel UHD 620 with its device id: 1 in 490. Without the id (a format current
+   *     Chrome no longer produces): 1 in 3,387.
+   * WARP runs through the same ANGLE D3D11 backend as hardware GPUs, so the WebGL
+   * limits we report stay consistent with it.
    */
   function generalizedGPU(realRenderer) {
     const r = String(realRenderer || '');
@@ -750,9 +754,8 @@
       if (family === 'amd') return ['Google Inc. (AMD)', 'ANGLE (AMD, AMD Radeon Graphics (radeonsi, renoir, LLVM 15.0.7, DRM 3.49, 6.1.0), OpenGL 4.6)'];
       return ['Google Inc. (Intel)', 'ANGLE (Intel, Mesa Intel(R) UHD Graphics 620 (KBL GT2), OpenGL 4.6)'];
     }
-    if (family === 'nvidia') return ['Google Inc. (NVIDIA)', 'ANGLE (NVIDIA, NVIDIA GeForce GTX 1650 (0x00001F82) Direct3D11 vs_5_0 ps_5_0, D3D11)'];
-    if (family === 'amd') return ['Google Inc. (AMD)', 'ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001638) Direct3D11 vs_5_0 ps_5_0, D3D11)'];
-    return ['Google Inc. (Intel)', 'ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00005917) Direct3D11 vs_5_0 ps_5_0, D3D11)'];
+    // Windows: every GPU brand maps to the single most common Windows string.
+    return ['Google Inc. (Microsoft)', 'ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)'];
   }
 
   const US_KEYBOARD = (() => {
@@ -1031,7 +1034,7 @@
 
     // WebGPU adapter info exposes the GPU vendor/architecture directly.
     const GAI = protoOf(win, 'GPUAdapterInfo');
-    ['architecture', 'device', 'description'].forEach((prop) => {
+    ['vendor', 'architecture', 'device', 'description'].forEach((prop) => {
       hookGetter(GAI, prop, function (originalGet) {
         const real = RApply(originalGet, this, []);
         const on = mitigations.webgl;
