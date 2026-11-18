@@ -1,7 +1,7 @@
 # PrintShield: Digital Fingerprint Visualizer & Mitigator
 
 **Course:** CS-550 (Professor Albayram)  
-**Research Team:** Aidan Gillen, Alexander Torino, Brendan Tierney  
+**Research Team:** Aidan Gillen, Alexander Torino, Brendan Tierney
 
 ---
 
@@ -12,7 +12,7 @@ As users become more aware of online tracking methods like cookies and digital f
 **PrintShield** is a human-centric Manifest V3 Chromium browser extension built for our CS-550 research study that:
 1. **Detects & Visualizes Digital Footprint Vectors** in real time as websites call fingerprinting APIs.
 2. **Educates Users** via plain-language *"Why this matters"* drawers detailing what trackers learn, how mitigations work, and potential site compatibility trade-offs.
-3. **Mitigates Fingerprinting** with per-vector or one-click toggles that spoof or generalize hardware and rendering signatures (focusing on **Canvas 2D** and **User-Agent / Navigator** properties alongside WebGL, Web Audio, and Font metrics).
+3. **Mitigates Fingerprinting** with per-vector or one-click toggles across **11 vectors** (Canvas, Browser Identity & Hardware, HTTP Headers, WebGL/GPU, Screen, Installed Fonts, Web Audio, Time Zone, Battery, Network, Keyboard & Media Devices). The guiding principle is **blend in, don't stand out**: stable values are replaced with the *most common real-world value* (8 cores, 1920×1080, a common real GPU string, the most common font list for your OS), and rendering outputs that cannot be generalized (canvas, audio) get invisible per-visit noise so they cannot be linked between visits. Made-up values such as "Generic GPU" are never used, because no real device reports them and they make a browser *more* unique.
 4. **Quantifies Privacy Protection** through a dynamic visual **Footprint Protection Score (0%–100%)** and toolbar badge.
 5. **Includes a Built-in Interactive Test Lab** (`sandbox/test-lab.html`) so user study participants can safely trigger and compare raw vs. mitigated fingerprints.
 
@@ -45,18 +45,30 @@ This section also serves as **Task 1 (Setup and Inspection)** in our participant
 3. Click **Run All Fingerprint Probes** on the Test Lab page, then re-open the PrintShield popup to inspect the detected fingerprinting calls.
 
 ### Task 2: Understanding Fingerprints
-1. Inside the PrintShield popup, inspect the five fingerprinting vectors:
-   - **Canvas 2D Rendering** *(Core Vector — 30% weight)*
-   - **User-Agent & Navigator** *(Core Vector — 30% weight)*
-   - **WebGL & GPU Hardware** *(15% weight)*
-   - **Web Audio Context** *(15% weight)*
-   - **Font Enumeration & Metrics** *(10% weight)*
-2. Click **"Why this matters ▼"** on each vector to read what information it reveals to trackers, how PrintShield mitigates it, and its site compatibility rating.
+1. Inside the PrintShield popup, inspect the fingerprinting vectors (score weight in parentheses):
+
+   | Vector | Weight | What it covers (amiunique.org attributes) |
+   |---|---|---|
+   | **Canvas Image Rendering** *(Core)* | 15% | Canvas hash, OffscreenCanvas |
+   | **Browser Identity & Hardware** *(Core)* | 12% | User agent, platform, CPU cores, device memory, languages, Client Hints, plugins, Do Not Track (navigator property list: detection and education only) |
+   | **HTTP Request Headers** *(Passive)* | 8% | Accept, Accept-Language, User-Agent header, high-entropy Client Hints; turns off Chrome page preloading while on |
+   | **WebGL & Graphics Card** | 13% | WebGL vendor/renderer, parameters, extensions, WebGL image data, WebGPU adapter info |
+   | **Screen Size & Position** | 10% | Screen width/height, available area, color depth, window position, device-size media queries |
+   | **Installed Fonts** | 12% | DOM and canvas font probing, `document.fonts.check()`, Local Font Access |
+   | **Web Audio Processing** | 8% | Audio data, frequency analyser |
+   | **Time Zone** | 6% | Time-zone name (offset is left real so clocks stay correct) |
+   | **Battery Status** | 6% | Battery level and charging state |
+   | **Network Connection** | 5% | Connection type, downlink, RTT, Data Saver |
+   | **Keyboard & Media Devices** | 5% | Keyboard layout, media device counts, permission probing (detection only) |
+
+2. Click **"Why this matters ▼"** on each vector to read what trackers learn, why it makes you unique, how PrintShield protects you, its site compatibility rating, and **what PrintShield can't hide**.
+3. Open **"Reading your amiunique.org / Cover Your Tracks results"** in the popup to learn why randomized values show as "unique" and why brand-new browser versions look rare on amiunique.org.
+4. The **Live Activity on This Page** feed and the toolbar badge show each fingerprint read as it happens, including reads from embedded third-party frames.
 
 ### Task 3: Mitigation Testing
-1. Toggle on individual vector mitigations (or click **Enable Recommended Shield**).
+1. Toggle on individual vector mitigations, or click **Recommended Shield** to turn them all on.
 2. Observe the dynamic change in the **Footprint Protection Score** ring and status badge.
-3. Return to the **Test Lab** tab and click **Run All Fingerprint Probes** again—notice how the Canvas hash changes and Navigator properties are generalized (`Win32`, `4 Logical Cores / 8 GB RAM`).
+3. Reload the **Test Lab** tab. The **Combined Fingerprint ID** now changes on every reload ("cannot be linked"), hardware values become common ones (`8 logical cores / 8 GB RAM`, a common screen size, a common GPU), and only your OS's default fonts are detected.
 4. Browse 2–3 standard websites (news sites, media sites, etc.) to evaluate browsing usability and check for any site degradation.
 
 ---
@@ -67,10 +79,12 @@ This section also serves as **Task 1 (Setup and Inspection)** in our participant
 finalbroswerproject/
 ├── manifest.json                 # Manifest V3 extension configuration
 ├── background/
-│   └── service-worker.js         # Ephemeral MV3 service worker (badge, score, session state)
+│   └── service-worker.js         # MV3 service worker (script registration, header rules, badge, score, detections)
 ├── content/
-│   ├── bridge.js                 # Isolated-world content script (storage sync & message relay)
-│   └── protector-main.js         # Main-world API interceptor & spoofer (Canvas, UA, Audio, WebGL, Fonts)
+│   ├── bridge.js                 # Isolated-world content script (private nonce channel, settings sync, detection relay)
+│   ├── protector-main.js         # Main-world detector & mitigator for all 11 vectors (registered by the service worker)
+│   ├── cfg/<vector>.js           # Tiny flag files registered before protector-main.js so settings apply before page scripts run
+│   └── fonts/font-shield-*.css   # GENERATED per-OS stylesheets that hide non-default fonts
 ├── popup/
 │   ├── popup.html                # Extension popup dashboard UI
 │   ├── popup.css                 # Responsive dark-mode styling & SVG score ring
@@ -78,10 +92,12 @@ finalbroswerproject/
 ├── sandbox/
 │   ├── test-lab.html             # Interactive fingerprinting test page for study participants
 │   ├── test-lab.css              # Test Lab stylesheet
-│   └── test-lab.js               # Live probes for Canvas, Navigator, WebGL, Audio, and Fonts
+│   └── test-lab.js               # Live probes for every vector + a Combined Fingerprint ID
 ├── icons/                        # Extension icons (16x16, 48x48, 128x128 PNGs)
 ├── scripts/
-│   └── generate_icons.ps1        # Icon generation utility script
+│   ├── generate_icons.ps1        # Icon generation utility script
+│   ├── font-lists.json           # Source of truth: per-OS default fonts + fonts to hide
+│   └── generate_font_shield.py   # Regenerates content/fonts/*.css and the allow list in protector-main.js
 └── .github/
     ├── workflows/ci.yml          # Automated Manifest V3 & JS syntax validation on push/PR
     └── pull_request_template.md  # Standardized PR checklist for Aidan, Alexander, & Brendan
@@ -89,6 +105,15 @@ finalbroswerproject/
 
 ---
 
-## 🤝 Team Collaboration Guide
+## ⚙️ How the Protection Works
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for our Git workflow, branch naming conventions, and instructions for adding Aidan Gillen, Alexander Torino, and Brendan Tierney as GitHub collaborators.
+- **Runs before the page.** The service worker registers `protector-main.js` in the page's main world at `document_start` with `chrome.scripting.registerContentScripts`, so hooks exist before any page script. Settings arrive synchronously through `content/cfg/<vector>.js` flag files and live through the bridge.
+- **Tamper-resistant channel.** The bridge and the protector exchange a random nonce before page scripts run, so a page cannot forge messages to switch protections off.
+- **Hard to detect.** Hooked functions keep their native `toString()`, name and length. Same-origin iframes, a classic bypass, are protected on first access and share the parent's noise seed so both give identical answers.
+- **HTTP headers** are rewritten with `declarativeNetRequest` dynamic rules. While that shield is on, Chrome's "Preload pages" setting is turned off (`privacy` permission), because pages preloaded from Google search skipped the header rules. `If-None-Match` and `Cache-Control` are added by Chrome's cache after extensions run, so they cannot be removed.
+- **Fonts** follow the most common profile for the OS. On Windows that is the default fonts plus the Microsoft Office pack, which tested far more common than a defaults-only list. Generated `@font-face` rules hide every other font (a face covering only `U+10FFFF` shadows the installed font) and emulate profile fonts the user lacks (`local("<font>")`, then a standard OS font). After editing `scripts/font-lists.json`, run `python scripts/generate_font_shield.py`.
+- **Left unchanged on purpose:** the browser version, the navigator property list and the WebGL extension list are shared by everyone on the same browser version. Faking them made the browser *more* unique in testing (e.g. hiding 2 navigator properties dropped the value from 0.05% to 0.00% on amiunique.org). The popup explains these limits instead.
+
+**Known limits:** Web Workers still see the real values, and Chrome-version-specific signals such as audio/video codec support and the browser version itself are left alone, because changing them would break sites or create inconsistencies.
+
+---

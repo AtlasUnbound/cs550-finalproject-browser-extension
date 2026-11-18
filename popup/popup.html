@@ -42,23 +42,25 @@
         Your browser currently shares unique hardware and rendering signatures with websites.
       </p>
       <div class="quick-actions">
-        <button id="protect-all-btn" class="action-btn primary-btn">Enable Recommended Shield</button>
+        <button id="protect-all-btn" class="action-btn primary-btn" title="Turn on every protection">Recommended Shield</button>
         <button id="reset-all-btn" class="action-btn ghost-btn">Reset</button>
       </div>
     </div>
   </section>
 
+  <div id="page-alert" class="page-alert" role="status" hidden></div>
+
   <!-- Study Guidance Banner -->
   <div class="study-tip" role="note">
     <span class="study-tip-icon">💡</span>
-    <span><strong>How to use:</strong> Click <em>"Why this matters"</em> on any vector to learn how trackers identify you, or toggle protection on.</span>
+    <span><strong>The goal is to blend in, not to hide.</strong> PrintShield reports the most common values so your browser looks like thousands of others. Click <em>"Why this matters"</em> on any vector to learn more.</span>
   </div>
 
   <!-- Fingerprinting Vectors List (Task 1, Task 2, Task 3) -->
   <main class="vectors-section">
     <div class="section-header">
       <h2>Fingerprinting Vectors</h2>
-      <span id="detected-summary" class="detected-counter">0 active on page</span>
+      <span id="detected-summary" class="detected-counter">0 read on this page</span>
     </div>
 
     <div id="vectors-container" class="vectors-list">
@@ -66,9 +68,30 @@
     </div>
   </main>
 
+  <details class="results-guide">
+    <summary>📊 Reading your amiunique.org / Cover Your Tracks results</summary>
+    <ul>
+      <li><strong>"Unique" canvas, WebGL data and audio values are expected.</strong> With protection on they change on every visit, so they can never be matched again. Cover Your Tracks labels them "randomized".</li>
+      <li><strong>amiunique.org compares you with years of past visitors.</strong> Anything tied to a brand-new browser version, such as the user agent, the navigator property list and WebGL extensions, looks rare there until more people update. Cover Your Tracks only uses recent visitors.</li>
+      <li><strong>The two sites disagree on some values.</strong> A UTC time zone, for example, is common on amiunique.org but rare on Cover Your Tracks. PrintShield aims for values that are common in real browsers today.</li>
+      <li><strong>Open the test from the address bar, not from a Google result,</strong> and don't reload it: reloads and revisits add cache headers (If-None-Match, Cache-Control) that no extension can remove.</li>
+      <li><strong>Reload the test page after changing settings,</strong> because some protections apply only to pages loaded afterwards. Headers like "Cache-Control" appear only because you reloaded.</li>
+    </ul>
+  </details>
+
+  <section class="activity-section" aria-label="Live fingerprinting activity on this page">
+    <div class="section-header">
+      <h2>Live Activity on This Page</h2>
+    </div>
+    <ul id="activity-feed" class="activity-feed"></ul>
+  </section>
+
   <footer class="app-footer">
     <span>CS-550 Privacy Research Project</span>
-    <span id="reload-notice" class="reload-notice" hidden>Reload tab to apply changes cleanly</span>
+    <span id="reload-notice" class="reload-notice" hidden>
+      Some changes need a reload
+      <button id="reload-tab-btn" type="button" class="reload-btn">Reload tab</button>
+    </span>
   </footer>
 
   <script src="popup.js"></script>
