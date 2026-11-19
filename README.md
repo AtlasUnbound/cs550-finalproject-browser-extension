@@ -11,7 +11,7 @@ As users become more aware of online tracking methods like cookies and digital f
 
 **PrintShield** is a human-centric Manifest V3 Chromium browser extension built for our CS-550 research study that:
 1. **Detects & Visualizes Digital Footprint Vectors** in real time as websites call fingerprinting APIs.
-2. **Educates Users** via plain-language *"Why this matters"* drawers detailing what trackers learn, how mitigations work, and potential site compatibility trade-offs.
+2. **Educates Users** with a first-run introduction and plain-language *"Learn more"* drawers detailing what trackers learn, how mitigations work, and potential site compatibility trade-offs.
 3. **Mitigates Fingerprinting** with per-vector or one-click toggles across **11 vectors** (Canvas, Browser Identity & Hardware, HTTP Headers, WebGL/GPU, Screen, Installed Fonts, Web Audio, Time Zone, Battery, Network, Keyboard & Media Devices). The guiding principle is **blend in, don't stand out**: stable values are replaced with the *most common real-world value* (8 cores, 1920×1080, a common real GPU string, the most common font list for your OS), and rendering outputs that cannot be generalized (canvas, audio) get invisible per-visit noise so they cannot be linked between visits. Made-up values such as "Generic GPU" are never used, because no real device reports them and they make a browser *more* unique.
 4. **Quantifies Privacy Protection** through a dynamic visual **Footprint Protection Score (0%–100%)** and toolbar badge.
 5. **Includes a Built-in Interactive Test Lab** (`sandbox/test-lab.html`) so user study participants can safely trigger and compare raw vs. mitigated fingerprints.
@@ -42,33 +42,34 @@ This section also serves as **Task 1 (Setup and Inspection)** in our participant
 ### Task 1: Setup & Inspection
 1. Click the **PrintShield** icon in your toolbar to open the dashboard popup.
 2. Click the **Test Lab** button in the top-right of the popup to launch the interactive study sandbox (`sandbox/test-lab.html`).
-3. Click **Run All Fingerprint Probes** on the Test Lab page, then re-open the PrintShield popup to inspect the detected fingerprinting calls.
+3. The Test Lab runs every test when it opens (click **Run all tests again** to repeat them). Re-open the PrintShield popup to see which details the page checked.
+4. On first use, the popup shows a short **"What is browser fingerprinting?"** introduction. The **?** button in the header reopens it.
 
 ### Task 2: Understanding Fingerprints
-1. Inside the PrintShield popup, inspect the fingerprinting vectors (score weight in parentheses):
+1. Inside the PrintShield popup, inspect the list **"What websites can learn about you"**. Each item has a plain-language name, with the technical name under **Technical details**:
 
-   | Vector | Weight | What it covers (amiunique.org attributes) |
+   | Popup name (technical vector) | Weight | What it covers (amiunique.org attributes) |
    |---|---|---|
-   | **Canvas Image Rendering** *(Core)* | 15% | Canvas hash, OffscreenCanvas |
-   | **Browser Identity & Hardware** *(Core)* | 12% | User agent, platform, CPU cores, device memory, languages, Client Hints, plugins, Do Not Track (navigator property list: detection and education only) |
-   | **HTTP Request Headers** *(Passive)* | 8% | Accept, Accept-Language, User-Agent header, high-entropy Client Hints; turns off Chrome page preloading while on |
-   | **WebGL & Graphics Card** | 13% | WebGL vendor/renderer, parameters, extensions, WebGL image data, WebGPU adapter info |
-   | **Screen Size & Position** | 10% | Screen width/height, available area, color depth, window position, device-size media queries |
+   | **Hidden drawing test** (Canvas) *(High risk)* | 15% | Canvas hash, OffscreenCanvas |
+   | **Browser & device details** (User agent) *(High risk)* | 12% | User agent, platform, CPU cores, device memory, languages, Client Hints, plugins, Do Not Track (navigator property list: detection and education only) |
+   | **Info sent with every request** (HTTP headers) *(Automatic)* | 8% | Accept, Accept-Language, User-Agent header, high-entropy Client Hints; turns off Chrome page preloading while on |
+   | **Graphics card** (WebGL) | 13% | WebGL vendor/renderer, parameters, extensions, WebGL image data, WebGPU adapter info |
+   | **Screen size** | 10% | Screen width/height, available area, color depth, window position, device-size media queries |
    | **Installed Fonts** | 12% | DOM and canvas font probing, `document.fonts.check()`, Local Font Access |
-   | **Web Audio Processing** | 8% | Audio data, frequency analyser |
+   | **Hidden sound test** (Web Audio) | 8% | Audio data, frequency analyser |
    | **Time Zone** | 6% | Time-zone name (offset is left real so clocks stay correct) |
-   | **Battery Status** | 6% | Battery level and charging state |
-   | **Network Connection** | 5% | Connection type, downlink, RTT, Data Saver |
-   | **Keyboard & Media Devices** | 5% | Keyboard layout, media device counts, permission probing (detection only) |
+   | **Battery level** | 6% | Battery level and charging state |
+   | **Internet connection** | 5% | Connection type, downlink, RTT, Data Saver |
+   | **Keyboard, camera & mic** | 5% | Keyboard layout, media device counts, permission probing (detection only) |
 
-2. Click **"Why this matters ▼"** on each vector to read what trackers learn, why it makes you unique, how PrintShield protects you, its site compatibility rating, and **what PrintShield can't hide**.
-3. Open **"Reading your amiunique.org / Cover Your Tracks results"** in the popup to learn why randomized values show as "unique" and why brand-new browser versions look rare on amiunique.org.
-4. The **Live Activity on This Page** feed and the toolbar badge show each fingerprint read as it happens, including reads from embedded third-party frames.
+2. Click **"Learn more ▼"** on any item to read what sites can learn, why it can identify you, what PrintShield does, its side effects and **what it can't hide**. Test-site statistics and the browser features the page used are under **Technical details**.
+3. Open **"For testers: reading amiunique.org and Cover Your Tracks results"** in the popup to learn why randomized values show as "unique" and why brand-new browser versions look rare on amiunique.org.
+4. The **What this page checked, live** feed and the toolbar badge show each fingerprint read as it happens, including reads from embedded third-party frames.
 
 ### Task 3: Mitigation Testing
-1. Toggle on individual vector mitigations, or click **Recommended Shield** to turn them all on.
-2. Observe the dynamic change in the **Footprint Protection Score** ring and status badge.
-3. Reload the **Test Lab** tab. The **Combined Fingerprint ID** now changes on every reload ("cannot be linked"), hardware values become common ones (`8 logical cores / 8 GB RAM`, a common screen size, a common GPU), and only your OS's default fonts are detected.
+1. Turn on individual switches, or click **Turn on protection** to turn them all on. **Turn all off** can be undone for 10 seconds.
+2. Observe the change in the **Protection level** ring and status badge, then click **Reload page** in the yellow notice so the changes take effect.
+3. Reload the **Test Lab** tab. The **Fingerprint ID** now changes on every reload ("cannot be linked"), hardware values become common ones (`8 logical cores / 8 GB RAM`, a common screen size, a common GPU), and only your OS's default fonts are detected.
 4. Browse 2–3 standard websites (news sites, media sites, etc.) to evaluate browsing usability and check for any site degradation.
 
 ---

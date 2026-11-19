@@ -150,7 +150,7 @@ body {
 }
 
 .status-pill {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 999px;
@@ -301,7 +301,7 @@ body {
 }
 
 .priority-tag {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 4px;
@@ -310,7 +310,7 @@ body {
 }
 
 .activity-badge {
-  font-size: 10px;
+  font-size: 11px;
   padding: 1px 6px;
   border-radius: 99px;
   font-weight: 600;
@@ -392,10 +392,10 @@ body {
   margin-top: 6px;
   padding-top: 5px;
   border-top: 1px dashed #334155;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 10.5px;
+  font-family: inherit;
+  font-size: 11px;
   color: #38bdf8;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 /* Toggle Switch */
@@ -450,7 +450,7 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
@@ -503,7 +503,7 @@ input:checked + .slider:before {
 .frame-chip {
   display: inline-block;
   font-family: inherit;
-  font-size: 9.5px;
+  font-size: 11px;
   padding: 0 5px;
   border-radius: 4px;
   background: rgba(168, 85, 247, 0.2);
@@ -558,7 +558,7 @@ input:checked + .slider:before {
 }
 
 .feed-state {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   margin-left: 4px;
@@ -570,19 +570,19 @@ input:checked + .slider:before {
 }
 
 .feed-count {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   margin-left: 4px;
 }
 
 .feed-detail {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--text-muted);
   overflow-wrap: anywhere;
 }
 
 .feed-time {
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -600,7 +600,7 @@ input:checked + .slider:before {
   border: 1px solid rgba(245, 158, 11, 0.45);
   border-radius: 5px;
   padding: 2px 7px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -639,4 +639,175 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+/* ---- Human-centered design additions ---------------------------------- */
+
+/* Visible focus for keyboard users on every interactive element */
+:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+input:focus-visible + .slider {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+/* Let people copy explanations and technical details */
+.vector-tooltip,
+.intro-card,
+.results-guide,
+.feed-detail {
+  user-select: text;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: rgba(59, 130, 246, 0.28);
+  color: #ffffff;
+}
+
+.intro-card {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: #dbeafe;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.intro-card h2 {
+  font-size: 13.5px;
+  color: #ffffff;
+}
+
+.intro-card ol {
+  margin-left: 18px;
+}
+
+.intro-card .action-btn {
+  align-self: flex-start;
+  padding: 5px 14px;
+}
+
+.metric-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.section-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: -4px 0 8px;
+}
+
+.notice-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.notice-bar[hidden] {
+  display: none;
+}
+
+.reload-notice {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fde68a;
+}
+
+.undo-bar {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: #e2e8f0;
+}
+
+.notice-btn {
+  flex-shrink: 0;
+  background: #f8fafc;
+  color: #0f172a;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notice-btn:hover {
+  background: #ffffff;
+}
+
+.page-alert[data-info] {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #dbeafe;
+}
+
+.expert-details {
+  margin-top: 6px;
+  border-top: 1px dashed var(--border-subtle);
+  padding-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.expert-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.expert-details p {
+  margin-top: 4px;
+}
+
+.expert-label {
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* The hidden attribute always wins over display rules such as flex */
+[hidden] {
+  display: none !important;
 }

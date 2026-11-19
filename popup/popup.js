@@ -1,6 +1,6 @@
 /**
  * PrintShield — Popup Dashboard Controller
- * - Visual Privacy Protection Metric (SVG ring + status)
+ * - Protection level ring + status, first-run introduction, undo for "Turn all off"
  * - 11 fingerprinting vectors with plain-language education (Study Task 2)
  * - Real-time mitigation toggles (Study Task 3)
  * - Live activity feed of fingerprint reads on the current tab
@@ -9,167 +9,193 @@
 const VECTORS_METADATA = [
   {
     id: 'canvas',
-    name: 'Canvas Image Rendering',
+    plainName: "Hidden drawing test",
+    name: "Canvas",
     priority: true,
-    shortSummary: 'Hidden drawings reveal tiny differences in how your computer draws graphics.',
+    shortSummary: "Sites draw a hidden picture and check how your computer drew it.",
     whatItReveals:
-      'A site secretly draws text and shapes, then reads back the pixels. Your graphics card, drivers, operating system and fonts each change the result very slightly, producing a "canvas hash".',
+      "A site secretly draws text and shapes, then reads the picture back. Your graphics card, drivers, system and fonts each change the result very slightly, so the picture works like a code for your computer.",
     whyItMatters:
-      'Canvas hashes are among the most identifying signals measured by amiunique.org. The hash survives clearing cookies and private browsing.',
+      "This is one of the strongest ways to recognize a browser. It still works after you clear cookies or use a private window.",
     howMitigationWorks:
-      'Adds invisible one-bit changes to a few pixels whenever a site exports or reads a canvas. The changes stay the same within a page but are new on every page load, so your hash cannot be linked across visits.',
-    siteImpact: 'Very low: the changes are far too small to see.',
+      "Changes a few pixels by an amount too small to see. The change is new on every visit, so the code is different each time and cannot link your visits.",
+    siteImpact: "None you would notice: the changes are invisible.",
+    limit: "Test websites will still call this value \"unique\". That is expected: it changes on every visit, so it cannot be used to follow you.",
     cantHide:
       'Test sites such as amiunique.org will call your canvas "unique (0.00%)". With protection on, that is the goal: the value changes on every visit, so it never matches again and cannot link your visits. Cover Your Tracks correctly labels it "randomized". Blocking canvas outright would break many sites.'
   },
   {
     id: 'userAgent',
-    name: 'Browser Identity & Hardware',
+    plainName: "Browser & device details",
+    name: "User agent, CPU, memory",
     priority: true,
-    shortSummary: 'Browser version, OS, CPU cores, memory, languages and device hints.',
+    shortSummary: "Your browser version, system, processor, memory and languages.",
     whatItReveals:
-      'The user agent and platform, CPU core count, memory size, languages, detailed "Client Hints" (exact OS build, CPU type, device model) and the list of browser features (navigator properties).',
+      "Your browser name and version, your operating system, how many processor cores and how much memory you have, your languages, and detailed version numbers your browser can share on request.",
     whyItMatters:
-      'Each value alone is common, but together they narrow you down fast. Faking an old browser version backfires: it no longer matches your real HTTP headers and features, which is itself rare.',
+      "Each detail alone is common, but together they quickly narrow down who you are.",
     howMitigationWorks:
-      'Reports the most common values (8 cores, 8 GB, your main language only) but keeps your real browser and version, so JavaScript and HTTP headers agree. Detailed hints (exact OS build, full version number) are rounded and rare navigator properties are hidden.',
-    siteImpact: 'Low: sites still see the correct browser and OS, so layouts are unaffected.',
+      "Reports the most common hardware (8 processor cores, 8 GB of memory) and only your main language. It rounds detailed version numbers. Your real browser and version stay visible, because faking them makes you stand out.",
+    siteImpact: "None you would notice: sites still see the right browser, so pages look the same.",
+    limit: "Sites can still see which browser and version you use. Faking it would make you stand out more, not less.",
     cantHide:
       'Your browser version. Chrome 157 looks rare on amiunique.org (about 0.06%) only because its database spans years of older browsers. Cover Your Tracks, which uses recent visitors, finds about 1 in 35 browsers share it. Faking an older version was tested: it still scored only 0.38% and contradicted your HTTP headers and real browser features, which trackers can spot. The list of navigator properties works the same way: every Chrome 157 user has the same list, so PrintShield leaves it alone (hiding just 2 properties made it unique).'
   },
   {
     id: 'headers',
-    name: 'HTTP Request Headers',
+    plainName: "Info sent with every request",
+    name: "HTTP headers",
     passive: true,
-    shortSummary: 'Sent to every server with every request, before any script runs.',
+    shortSummary: "Details your browser sends to a website before the page even loads.",
     whatItReveals:
-      'Headers such as User-Agent, Accept (which file formats you support), Accept-Language and, when a server asks, Client Hints like device memory, screen width or network speed.',
+      "Every time your browser asks a website for something, it attaches notes: which browser you use, which image types it can show, your language and, if the site asks, details like memory and connection speed.",
     whyItMatters:
-      'This is passive fingerprinting: the server sees it without running any code, so it cannot be detected on the page. Rare format lists or detailed hints make you stand out. Tip: turning on "Do Not Track" sounds private but makes you rarer, because few people enable it.',
+      "The website gets these notes without running any code, so you cannot see it happen. Unusual notes make you stand out. Tip: the \"Do Not Track\" setting sounds private, but few people use it, so it makes you easier to spot.",
     howMitigationWorks:
-      'Replaces the Accept header with the most common Chrome value and strips the detailed Client Hints that servers can request. It also turns off Chrome\'s "Preload pages" setting while on, because pages preloaded from Google search skip extension header rules. Language and User-Agent headers are aligned by the Browser Identity shield.',
-    siteImpact: 'Low: a site may serve a slightly less optimized image format, and links open without being preloaded.',
+      "Sends the most common version of these notes and removes the detailed extras. It also turns off Chrome's \"Preload pages\" setting while on, because preloaded pages skip this protection.",
+    siteImpact: "Very small: some images may load in a slightly older format, and links are not loaded ahead of time.",
+    limit: "Your browser version and language are still sent. Reloading a page adds a few extra details that no extension can remove.",
     cantHide:
       'The browser version in the User-Agent header (see Browser Identity) and your language, since changing the language would show you sites in the wrong language. "If-None-Match" (an ETag, which works like a cookie stored in your cache) and "Cache-Control: max-age=0" are added by Chrome\'s cache after extensions run, so no extension can remove them. They only appear when you revisit or reload a page; clear your cache or open the test in a fresh window to avoid them.'
   },
   {
     id: 'webgl',
-    name: 'WebGL & Graphics Card',
-    shortSummary: 'Your exact graphics card model and its hardware limits.',
+    plainName: "Graphics card",
+    name: "WebGL / WebGPU",
+    shortSummary: "The exact model of your graphics card and what it can do.",
     whatItReveals:
-      'The GPU vendor and model string (for example "NVIDIA GeForce RTX 3060"), dozens of hardware limits, supported extensions and the pixels of 3D scenes. WebGPU can also reveal the GPU architecture.',
+      "The brand and model of your graphics card (for example \"NVIDIA GeForce RTX 3060\"), dozens of technical limits it has, and the exact pixels of 3D scenes it draws.",
     whyItMatters:
-      'GPU strings and limits vary a lot between machines and are often unique when combined. A made-up name like "Generic GPU" backfires, because no real computer reports it.',
+      "Graphics cards and their limits vary a lot between computers, so together they are often unique to you.",
     howMitigationWorks:
-      'Reports the most common real GPU string (on Windows: Microsoft\'s built-in "Basic Render Driver", used by virtual machines, remote desktops and PCs without GPU acceleration), caps hardware limits at common values, hides rare extensions and adds invisible noise to read-back 3D images.',
-    siteImpact: 'Low: 3D sites still work. Very advanced WebGL apps may lose rare features, and some anti-bot checks may ask for a CAPTCHA more often.',
+      "Reports the most common real graphics card name (on Windows, Microsoft's built-in \"Basic Render Driver\"), reports common limits, hides rare features and adds invisible changes to 3D images.",
+    siteImpact: "Small: 3D sites still work. A few very advanced 3D apps may lose rare features, and some sites that check for robots may ask for a CAPTCHA more often.",
+    limit: "Some graphics details come from your real hardware and cannot be changed. A few sites that check for robots may show an extra CAPTCHA.",
     cantHide:
       'WebGL parameters and the extension list come from your browser version and real graphics hardware. PrintShield caps the limits and hides rare extensions, but it cannot add features your GPU lacks, so this can stay uncommon. "WebGL Data" is a rendered image, randomized like canvas, so test sites list it as unique even though it cannot be linked. On Cover Your Tracks the Basic Render Driver string is shared by about 1 in 114 browsers, compared with 1 in 490 for the most common Intel laptop GPU. A few anti-bot services treat software rendering as a hint of automation and may show an extra CAPTCHA; turn this shield off on such a site if that happens.'
   },
   {
     id: 'screen',
-    name: 'Screen Size & Position',
-    shortSummary: 'Monitor resolution, usable area, color depth and window position.',
+    plainName: "Screen size",
+    name: "Screen & window",
+    shortSummary: "Your screen size and where your window sits on it.",
     whatItReveals:
-      'Screen width and height, the area left after your taskbar, color depth, where your window sits on the desktop, and media queries for the device size.',
+      "Your screen's width and height, the space left after your taskbar, how many colors it shows, and where your browser window is placed.",
     whyItMatters:
-      'An uncommon resolution (like 1680×1050) or an unusual taskbar height can be shared by under 1% of users. Window position can reveal a multi-monitor setup.',
+      "An unusual screen size or taskbar can be shared by fewer than 1 in 100 people. The window position can reveal that you use more than one monitor.",
     howMitigationWorks:
-      'Reports the smallest common resolution that fits your window (for example 1920×1080 with a standard taskbar), 24-bit color, and a window position of 0,0.',
-    siteImpact: 'Very low: page layout uses the window size, which is unchanged.',
+      "Reports the most common screen size that fits your window (for example 1920×1080 with a normal taskbar) and a standard window position.",
+    siteImpact: "None you would notice: pages use your real window size for their layout.",
+    limit: "The size of your browser window stays real, because pages need it to lay themselves out.",
     cantHide:
       'Your browser window size is not changed, because pages need it for layout. A maximized window can still hint at your real usable screen area.'
   },
   {
     id: 'fonts',
-    name: 'Installed Fonts',
-    shortSummary: 'Fonts added by apps like Office or Adobe reveal your software.',
+    plainName: "Installed fonts",
+    name: "Font list",
+    shortSummary: "The fonts on your computer reveal which apps you have installed.",
     whatItReveals:
-      'Scripts measure text in hundreds of fonts; if the width changes, the font is installed. The list reveals installed software (Microsoft Office adds fonts like "Algerian" and "Agency FB"), languages and even your profession.',
+      "Sites test hundreds of font names to see which ones you have. Apps like Microsoft Office or Adobe add their own fonts, so the list hints at your software, your languages and even your job.",
     whyItMatters:
-      'Font lists are one of the strongest identifiers. amiunique.org often finds a given font list shared by about 1% of browsers or fewer.',
+      "Your font list is one of the strongest ways to recognize you. Test sites often find a font list shared by 1 in 100 browsers or fewer.",
     howMitigationWorks:
-      'Shows the most common font list for your operating system (on Windows: Windows + Microsoft Office). Common fonts you lack are emulated and about 170 rarer fonts are hidden, so you match the largest crowd instead of standing out. Also blocks the font-list API and answers font checks the same way.',
-    siteImpact: 'Low: a page asking for a hidden font shows a standard font instead. Web fonts that sites download still work.',
+      "Shows the most common font list for your system (on Windows: the fonts that come with Windows and Microsoft Office). Rare fonts are hidden and common ones you lack are filled in, so you match the biggest crowd.",
+    siteImpact: "Small: a page that asks for a hidden font shows a standard font instead. Fonts that websites download themselves still work.",
+    limit: "No font list is shared by everyone, so this makes you much less unique but cannot make you invisible.",
     cantHide:
       'No font list is shared by everyone. The most common Windows list is "Windows + Microsoft Office", so PrintShield shows exactly that: Office fonts you lack are emulated and every other extra font is hidden. Advanced scripts that inspect how a font draws, not just whether it exists, may still notice differences.'
   },
   {
     id: 'audio',
-    name: 'Web Audio Processing',
-    shortSummary: 'Silent sounds reveal tiny math differences in your audio stack.',
+    plainName: "Hidden sound test",
+    name: "Web Audio",
+    shortSummary: "Sites make a silent sound and check how your computer processed it.",
     whatItReveals:
-      'A site generates a sound without playing it and reads back the samples. Your CPU, OS and browser audio code each produce slightly different numbers.',
+      "A site creates a sound without playing it, then reads back the result. Your processor, system and browser each produce slightly different numbers.",
     whyItMatters:
-      'The resulting audio hash stays the same for your device and survives cookie clearing.',
+      "The result stays the same for your computer and survives clearing cookies.",
     howMitigationWorks:
-      'Adds inaudible noise (about one millionth of the signal) to rendered audio and frequency data. It stays consistent within a page but changes on every visit.',
-    siteImpact: 'None: far below human hearing.',
+      "Adds a change about a million times quieter than the sound itself. It is new on every visit, so the result cannot link your visits.",
+    siteImpact: "None: far too small to hear.",
+    limit: "Test websites will still call this value \"unique\". That is expected: it changes on every visit, so it cannot be used to follow you.",
     cantHide:
       'Like canvas, test sites show the audio value as unique because it changes on each visit, which is what makes it unlinkable. Your audio sample rate (44.1 or 48 kHz) comes from your sound hardware and is left as is.'
   },
   {
     id: 'timezone',
-    name: 'Time Zone',
-    shortSummary: 'Your time zone narrows down where you live.',
+    plainName: "Time zone",
+    name: "Intl / Date",
+    shortSummary: "Your time zone narrows down where you live.",
     whatItReveals:
-      'JavaScript dates report your time-zone offset (for example UTC-05:00) and name (for example America/New_York).',
+      "Your time zone's name (for example America/New_York) and how many hours you are from UTC, the world's reference time.",
     whyItMatters:
-      'Combined with language, it places you in a region, and many zones are shared by only ~5% of users. It also exposes VPN users whose time zone does not match their IP address.',
+      "Together with your language, it places you in a region. It can also give away people using a VPN, when their time zone does not match their location.",
     howMitigationWorks:
-      'Reports the most widely used time-zone name that runs exactly the same clock as yours (for example America/Detroit or America/Toronto become America/New_York). Your clock is unchanged, so this costs nothing.',
-    siteImpact: 'None: every time shown on sites stays correct.',
+      "Reports the most widely used name for your time zone (for example America/Detroit becomes America/New_York, which runs the same clock). If you already use the common name, nothing changes.",
+    siteImpact: "None: every time shown on websites stays correct.",
+    limit: "Your clock stays correct, so sites can still tell roughly where in the world you are. Your internet address reveals that anyway. If you already use the most common zone name, nothing needs to change.",
     cantHide:
       'Your UTC offset (for example UTC-05:00) stays visible: changing it would make every clock on the web wrong, and your IP address reveals your region anyway. Pretending to be in UTC was tested: common on amiunique.org (about 21%) but rare on Cover Your Tracks (1 in 91), where most UTC visitors are servers or Tor users.'
   },
   {
     id: 'battery',
-    name: 'Battery Status',
-    shortSummary: 'Your exact battery level and charging state.',
+    plainName: "Battery level",
+    name: "Battery API",
+    shortSummary: "Your exact battery level and whether you are charging.",
     whatItReveals:
-      'The battery API shows your charge level (for example 60%), whether you are charging, and the time remaining.',
+      "How full your battery is (for example 60%), whether it is charging and how long it will last.",
     whyItMatters:
-      'Battery values change slowly, so for a few minutes they can link your visits across different sites, even in private mode. amiunique.org found the combination can be rarer than 0.1%.',
-    howMitigationWorks: 'Always reports a plugged-in, fully charged device, the most common desktop answer.',
-    siteImpact: 'None for nearly all sites.',
+      "Your battery level changes slowly, so for a few minutes it can link your visits to different sites, even in a private window.",
+    howMitigationWorks: "Always reports a fully charged, plugged-in device, the most common answer on desktop computers.",
+    siteImpact: "None for almost all sites.",
+    limit: "Nothing important.",
     cantHide:
       'Nothing important. Desktop computers without a battery already report a full, charging battery.'
   },
   {
     id: 'network',
-    name: 'Network Connection',
-    shortSummary: 'Estimated connection speed, latency and data-saver setting.',
+    plainName: "Internet connection",
+    name: "Network Information API",
+    shortSummary: "Your connection type and estimated speed.",
     whatItReveals:
-      'The connection API reports your connection type (such as 4g), download speed, round-trip time and whether Data Saver is on.',
+      "Your connection type (such as 4G), estimated download speed, response time and whether data saver is on.",
     whyItMatters:
-      'These values depend on your internet provider and location. Combined, they add several bits of identifying information.',
-    howMitigationWorks: 'Reports the most common values: 4g, 10 Mbps, 50 ms, Data Saver off.',
-    siteImpact: 'Very low: video sites may tune quality a little less precisely.',
+      "These numbers depend on your internet provider and location, and they add to what makes you unique.",
+    howMitigationWorks: "Reports the most common values: 4G, 10 Mbps, 50 ms response time and data saver off.",
+    siteImpact: "Very small: video sites may pick a quality level a little less precisely.",
+    limit: "Your internet address and real connection speed are still visible to the websites you visit.",
     cantHide:
       'Your IP address and your real connection speed are still visible to servers. This only changes what page scripts can read.'
   },
   {
     id: 'devices',
-    name: 'Keyboard & Media Devices',
-    shortSummary: 'Keyboard layout, cameras, microphones and permission settings.',
+    plainName: "Keyboard, camera & mic",
+    name: "Keyboard layout, media devices",
+    shortSummary: "Your keyboard layout and how many cameras and microphones you have.",
     whatItReveals:
-      'Your keyboard layout (which hints at language and region), how many cameras, microphones and speakers you have, and how you have set site permissions.',
+      "Your keyboard layout, which hints at your language and country, how many cameras, microphones and speakers you have, and your camera and microphone permission settings.",
     whyItMatters:
-      'A non-US keyboard layout or unusual device count is rare. amiunique.org found keyboard layout values shared by only ~6% of users.',
+      "A keyboard layout other than US, or an unusual number of devices, is rare. Test sites found some keyboard layouts shared by only about 6 in 100 users.",
     howMitigationWorks:
-      'Reports a US QWERTY layout and one microphone, one camera and one speaker until you allow a site to use your camera or mic. Permission checks are shown for awareness only, since default settings are the same for most people.',
-    siteImpact: 'Low: games that show key labels may display US labels.',
+      "Reports a US keyboard and one camera, one microphone and one speaker, until you allow a site to use your camera or microphone. Permission checks are only reported, since most people have the same default settings.",
+    siteImpact: "Small: games that show key names may show US key names.",
+    limit: "When you type on a page, sites can still see which letters your keys produce.",
     cantHide:
       'Permission states (for example camera: prompt) are left alone, because the defaults are what most people have. If you actually type on a page, scripts can still see which characters your keys produce.'
   }
 ];
 
-const VECTOR_NAMES = Object.fromEntries(VECTORS_METADATA.map((m) => [m.id, m.name]));
+const VECTOR_NAMES = Object.fromEntries(VECTORS_METADATA.map((m) => [m.id, m.plainName]));
 
 let currentTabId = null;
 let currentTabUrl = '';
 let currentWeights = {};
+let currentMitigations = {};
+let undoSnapshot = null;
+let undoTimer = null;
 const expandedTooltips = new Set();
+const expandedExpert = new Set();
 let pendingRefresh = null;
 
 function escapeHtml(value) {
@@ -181,8 +207,13 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
+function isTestLab(url) {
+  return String(url || '').startsWith(chrome.runtime.getURL('sandbox/'));
+}
+
+// The Test Lab is an extension page, but PrintShield runs on it like on any website.
 function isWebPage(url) {
-  return /^(https?|file):/.test(url || '');
+  return /^(https?|file):/.test(url || '') || isTestLab(url);
 }
 
 function updateScoreUI(score) {
@@ -192,6 +223,7 @@ function updateScoreUI(score) {
   const descEl = document.getElementById('metric-explanation');
 
   scoreValueEl.textContent = String(score);
+  document.querySelector('.metric-ring-container').setAttribute('aria-label', `Protection level: ${score} percent`);
   const circumference = 219.91; // 2 * PI * 35
   ringFillEl.style.strokeDashoffset = String(circumference - (score / 100) * circumference);
 
@@ -199,33 +231,34 @@ function updateScoreUI(score) {
   if (score >= 75) {
     ringFillEl.style.stroke = '#10b981';
     badgeEl.classList.add('status-high');
-    badgeEl.textContent = 'Strong Shield';
-    descEl.textContent = 'Your browser reports common values, so it blends in with a large crowd of other browsers.';
+    badgeEl.textContent = 'Well protected';
+    descEl.textContent = 'Your browser reports common details, so it looks like thousands of other browsers.';
   } else if (score >= 35) {
     ringFillEl.style.stroke = '#f59e0b';
     badgeEl.classList.add('status-medium');
-    badgeEl.textContent = 'Partial Shield';
-    descEl.textContent = 'Some vectors are protected, but the unprotected ones can still be combined into a unique ID.';
+    badgeEl.textContent = 'Partly protected';
+    descEl.textContent = 'Some details are protected. The rest can still be combined to recognize you.';
   } else {
     ringFillEl.style.stroke = '#f43f5e';
     badgeEl.classList.add('status-low');
-    badgeEl.textContent = 'High Exposure';
-    descEl.textContent = 'Websites can combine your hardware, fonts and settings into an ID that follows you without cookies.';
+    badgeEl.textContent = 'Not protected';
+    descEl.textContent = 'Websites can combine details about your computer into an ID that follows you, even without cookies.';
   }
 }
 
+// Every status has an icon and words, so it never relies on color alone.
 function statusFor(meta, vState, isProtected, onWebPage) {
   if (meta.passive) {
-    if (!onWebPage) return { cls: 'activity-idle', label: 'Passive' };
+    if (!onWebPage) return { cls: 'activity-idle', label: 'Sent to every site' };
     return isProtected
-      ? { cls: 'activity-protected', label: 'Sent · generalized' }
-      : { cls: 'activity-detected', label: 'Sent with every request' };
+      ? { cls: 'activity-protected', label: '🛡️ Sent, made common' }
+      : { cls: 'activity-detected', label: '⚠️ Sent to this site' };
   }
   const isDetected = vState.count > 0;
-  if (isDetected && isProtected) return { cls: 'activity-protected', label: `Read & masked (${vState.count})` };
-  if (isDetected) return { cls: 'activity-detected', label: `Read by page (${vState.count})` };
-  if (isProtected) return { cls: 'activity-protected', label: 'Protected' };
-  return { cls: 'activity-idle', label: 'Not read yet' };
+  if (isDetected && isProtected) return { cls: 'activity-protected', label: '🛡️ Checked · protected' };
+  if (isDetected) return { cls: 'activity-detected', label: '⚠️ Checked · not protected' };
+  if (isProtected) return { cls: 'activity-protected', label: '🛡️ Protected' };
+  return { cls: 'activity-idle', label: 'Not checked yet' };
 }
 
 function renderVectorsList(tabData, mitigations) {
@@ -254,20 +287,19 @@ function renderVectorsList(tabData, mitigations) {
 
     let liveReadout;
     if (meta.passive) {
-      liveReadout = '<div class="live-api-readout">Headers are sent automatically with every request, so this page\'s server has already received them.</div>';
+      liveReadout = '<div class="live-api-readout">Your browser sends this automatically when it loads a page, so the website already has it.</div>';
     } else if (vState.lastApi) {
       liveReadout = `<div class="live-api-readout">
-          <div><strong>Latest:</strong> ${escapeHtml(vState.detail)}${vState.frame ? ` <span class="frame-chip">in ${escapeHtml(vState.frame)}</span>` : ''}</div>
-          ${apiList ? `<ul class="api-list">${apiList}</ul>` : ''}
+          <strong>On this page:</strong> checked ${vState.count} time${vState.count === 1 ? '' : 's'}.
+          Latest: ${escapeHtml(vState.detail)}${vState.frame ? ` <span class="frame-chip">in ${escapeHtml(vState.frame)}</span>` : ''}
         </div>`;
     } else {
-      liveReadout = '<div class="live-api-readout">This page has not read this fingerprint yet. Open "Test Lab" above to see it live!</div>';
+      liveReadout = '<div class="live-api-readout">This page has not checked this yet. Open the Test Lab (top right) to see it happen.</div>';
     }
 
     const tags = [
-      meta.priority ? '<span class="priority-tag">Core</span>' : '',
-      meta.passive ? '<span class="priority-tag passive-tag">Passive</span>' : '',
-      meta.optIn ? '<span class="priority-tag optin-tag">Opt-in</span>' : ''
+      meta.priority ? '<span class="priority-tag" title="One of the details that identifies browsers best">High risk</span>' : '',
+      meta.passive ? '<span class="priority-tag passive-tag" title="Sent by your browser without any page code, so pages cannot show you when it happens">Automatic</span>' : ''
     ].join('');
 
     return `
@@ -275,66 +307,78 @@ function renderVectorsList(tabData, mitigations) {
         !isProtected && vState.count > 0 ? 'exposed-card' : ''}">
         <div class="vector-top">
           <div class="vector-title-group">
-            <span class="vector-name">${escapeHtml(meta.name)}</span>
+            <span class="vector-name">${escapeHtml(meta.plainName)}</span>
             ${tags}
           </div>
-          <label class="switch" title="Toggle ${escapeHtml(meta.name)} protection (+${weight}% score)">
-            <input type="checkbox" data-vector="${meta.id}" ${isProtected ? 'checked' : ''} aria-label="Protect ${escapeHtml(meta.name)}">
+          <label class="switch" title="${isProtected ? 'Protection on' : 'Protection off'}. Worth ${weight}% of your protection level.">
+            <input type="checkbox" data-vector="${meta.id}" ${isProtected ? 'checked' : ''} aria-label="Protect ${escapeHtml(meta.plainName)}">
             <span class="slider"></span>
           </label>
         </div>
+        <div class="vector-summary">${escapeHtml(meta.shortSummary)}</div>
         <div class="vector-subrow">
           <span class="activity-badge ${status.cls}">${escapeHtml(status.label)}</span>
-          <button type="button" class="tooltip-trigger" data-tooltip-btn="${meta.id}" aria-expanded="${isExpanded}">
-            ${isExpanded ? 'Hide info ▲' : 'Why this matters ▼'}
+          <button type="button" class="tooltip-trigger" data-tooltip-btn="${meta.id}" aria-expanded="${isExpanded}" aria-controls="tooltip-${meta.id}">
+            ${isExpanded ? 'Show less ▲' : 'Learn more ▼'}
           </button>
         </div>
-        <div class="vector-summary">${escapeHtml(meta.shortSummary)}</div>
         <div class="vector-tooltip" id="tooltip-${meta.id}" ${isExpanded ? '' : 'hidden'}>
           <div class="tooltip-section">
-            <span class="tooltip-heading">🔍 What trackers learn</span>
+            <span class="tooltip-heading">🔍 What sites can learn</span>
             <span>${escapeHtml(meta.whatItReveals)}</span>
           </div>
           <div class="tooltip-section">
-            <span class="tooltip-heading">⚠️ Why it makes you unique</span>
+            <span class="tooltip-heading">⚠️ Why it can identify you</span>
             <span>${escapeHtml(meta.whyItMatters)}</span>
           </div>
           <div class="tooltip-section">
-            <span class="tooltip-heading">🛡️ How PrintShield protects you (+${weight}%)</span>
+            <span class="tooltip-heading">🛡️ What PrintShield does</span>
             <span>${escapeHtml(meta.howMitigationWorks)}</span>
           </div>
           <div class="tooltip-section">
-            <span class="tooltip-heading">⚖️ Site compatibility</span>
+            <span class="tooltip-heading">⚖️ Side effects</span>
             <span>${escapeHtml(meta.siteImpact)}</span>
           </div>
-          ${meta.cantHide ? `<div class="tooltip-section limits-section">
-            <span class="tooltip-heading">🚧 What PrintShield can't hide</span>
-            <span>${escapeHtml(meta.cantHide)}</span>
-          </div>` : ''}
+          <div class="tooltip-section limits-section">
+            <span class="tooltip-heading">🚧 What it can't hide</span>
+            <span>${escapeHtml(meta.limit)}</span>
+          </div>
           ${liveReadout}
+          <details class="expert-details" data-expert="${meta.id}" ${expandedExpert.has(meta.id) ? 'open' : ''}>
+            <summary>Technical details (${escapeHtml(meta.name)})</summary>
+            <p>${escapeHtml(meta.cantHide)}</p>
+            ${apiList ? `<p class="expert-label">Browser features this page used:</p><ul class="api-list">${apiList}</ul>` : ''}
+          </details>
         </div>
       </div>`;
   }).join('');
 
   container.innerHTML = html;
   const total = VECTORS_METADATA.filter((m) => !m.passive).length;
-  detectedSummary.textContent = `${activeCount} of ${total} read on this page`;
+  detectedSummary.textContent = `${activeCount} of ${total} checked by this page`;
 
   const alertEl = document.getElementById('page-alert');
-  if (exposedCount > 0) {
+  alertEl.removeAttribute('data-ok');
+  alertEl.removeAttribute('data-info');
+  if (!onWebPage) {
     alertEl.hidden = false;
-    alertEl.removeAttribute('data-ok');
-    alertEl.textContent = `⚠️ This page read ${exposedCount} fingerprint type${exposedCount === 1 ? '' : 's'} you have not protected yet.`;
+    alertEl.setAttribute('data-info', '');
+    alertEl.textContent = 'ℹ️ PrintShield only works on websites, not on browser pages like this one. Open any website, or try the Test Lab.';
+  } else if (exposedCount > 0) {
+    const one = exposedCount === 1;
+    alertEl.hidden = false;
+    alertEl.textContent = `⚠️ This page checked ${exposedCount} detail${one ? '' : 's'} that ${one ? 'is' : 'are'} not protected. Turn on protection above to hide ${one ? 'it' : 'them'}.`;
   } else if (activeCount > 0) {
     alertEl.hidden = false;
     alertEl.setAttribute('data-ok', '');
-    alertEl.textContent = `✅ This page read ${activeCount} fingerprint type${activeCount === 1 ? '' : 's'}, and all of them were masked.`;
+    alertEl.textContent = `✅ This page checked ${activeCount} detail${activeCount === 1 ? '' : 's'} about your browser, and PrintShield protected all of them.`;
   } else {
     alertEl.hidden = true;
   }
 
   container.querySelectorAll('input[type="checkbox"][data-vector]').forEach((checkbox) => {
     checkbox.addEventListener('change', async (e) => {
+      hideUndo();
       await setMitigation(e.target.getAttribute('data-vector'), e.target.checked);
     });
   });
@@ -348,8 +392,17 @@ function renderVectorsList(tabData, mitigations) {
       if (open) expandedTooltips.add(id);
       else expandedTooltips.delete(id);
       drawer.hidden = !open;
-      btn.textContent = open ? 'Hide info ▲' : 'Why this matters ▼';
+      btn.textContent = open ? 'Show less ▲' : 'Learn more ▼';
       btn.setAttribute('aria-expanded', String(open));
+    });
+  });
+
+  // Remember open "Technical details" sections across live refreshes.
+  container.querySelectorAll('details[data-expert]').forEach((el) => {
+    el.addEventListener('toggle', () => {
+      const id = el.getAttribute('data-expert');
+      if (el.open) expandedExpert.add(id);
+      else expandedExpert.delete(id);
     });
   });
 }
@@ -358,7 +411,7 @@ function renderActivityFeed(tabData) {
   const feed = document.getElementById('activity-feed');
   const events = (tabData?.recentEvents || []).slice(0, 12);
   if (events.length === 0) {
-    feed.innerHTML = '<li class="feed-empty">No fingerprinting activity recorded on this page yet.</li>';
+    feed.innerHTML = '<li class="feed-empty">Nothing yet. When this page checks a detail about your browser, it will appear here.</li>';
     return;
   }
   feed.innerHTML = events.map((ev) => {
@@ -367,8 +420,8 @@ function renderActivityFeed(tabData) {
         <span class="feed-dot" aria-hidden="true"></span>
         <div class="feed-body">
           <div class="feed-title">${escapeHtml(VECTOR_NAMES[ev.vector] || ev.vector)}
-            <span class="feed-state">${ev.mitigated ? 'masked' : 'exposed'}</span>
-            ${ev.count > 1 ? `<span class="feed-count">×${ev.count}</span>` : ''}
+            <span class="feed-state">${ev.mitigated ? '🛡️ protected' : '⚠️ not protected'}</span>
+            ${ev.count > 1 ? `<span class="feed-count" title="Checked ${ev.count} times">×${ev.count}</span>` : ''}
           </div>
           <div class="feed-detail">${escapeHtml(ev.detail)}${ev.frame ? ` <span class="frame-chip">in ${escapeHtml(ev.frame)}</span>` : ''}</div>
         </div>
@@ -377,13 +430,46 @@ function renderActivityFeed(tabData) {
   }).join('');
 }
 
+function showReloadNotice() {
+  document.getElementById('reload-notice').hidden = !isWebPage(currentTabUrl);
+}
+
+function hideUndo() {
+  clearTimeout(undoTimer);
+  undoSnapshot = null;
+  document.getElementById('undo-bar').hidden = true;
+}
+
 async function setMitigation(vector, enabled) {
   const response = await chrome.runtime.sendMessage({ type: 'SET_MITIGATION', vector, enabled, tabId: currentTabId });
   if (response && response.ok) {
     updateScoreUI(response.score);
-    document.getElementById('reload-notice').hidden = !isWebPage(currentTabUrl);
+    showReloadNotice();
     await refreshDashboard();
   }
+  return response;
+}
+
+// "Turn all off" can be undone for a few seconds, so a misclick costs nothing.
+async function turnAllOff() {
+  const snapshot = Object.keys(currentMitigations).filter((id) => currentMitigations[id]);
+  await setMitigation('ALL', false);
+  if (snapshot.length === 0) return;
+  undoSnapshot = snapshot;
+  document.getElementById('undo-bar').hidden = false;
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(hideUndo, 10000);
+}
+
+async function undoTurnAllOff() {
+  const snapshot = undoSnapshot;
+  hideUndo();
+  if (!snapshot) return;
+  for (const id of snapshot) {
+    await chrome.runtime.sendMessage({ type: 'SET_MITIGATION', vector: id, enabled: true, tabId: currentTabId });
+  }
+  showReloadNotice();
+  await refreshDashboard();
 }
 
 async function refreshDashboard() {
@@ -393,18 +479,23 @@ async function refreshDashboard() {
   currentTabUrl = tab.url || '';
 
   const domainEl = document.getElementById('active-domain');
-  try {
-    const urlObj = new URL(currentTabUrl);
-    domainEl.textContent = `Active page: ${urlObj.hostname || tab.title || 'local file'}`;
-  } catch {
-    domainEl.textContent = `Active page: ${tab.title || 'browser tab'}`;
+  if (isTestLab(currentTabUrl)) {
+    domainEl.textContent = 'Watching: PrintShield Test Lab';
+  } else {
+    try {
+      const urlObj = new URL(currentTabUrl);
+      domainEl.textContent = `Watching: ${urlObj.hostname || tab.title || 'local file'}`;
+    } catch {
+      domainEl.textContent = `Watching: ${tab.title || 'browser tab'}`;
+    }
   }
 
   const response = await chrome.runtime.sendMessage({ type: 'GET_TAB_STATUS', tabId: tab.id, url: tab.url });
   if (response && response.ok) {
     currentWeights = response.weights || {};
+    currentMitigations = response.mitigations || {};
     updateScoreUI(response.score);
-    renderVectorsList(response.tabData, response.mitigations);
+    renderVectorsList(response.tabData, currentMitigations);
     renderActivityFeed(response.tabData);
   }
 }
@@ -417,11 +508,36 @@ function scheduleRefresh() {
   }, 300);
 }
 
+// First-run introduction: shown until the user dismisses it, reopened with the "?" button.
+async function setupIntro() {
+  const intro = document.getElementById('intro');
+  const helpBtn = document.getElementById('help-btn');
+  let dismissed = false;
+  try {
+    dismissed = Boolean((await chrome.storage.local.get('introDismissed')).introDismissed);
+  } catch { /* show the intro if storage is unavailable */ }
+  intro.hidden = dismissed;
+  helpBtn.setAttribute('aria-expanded', String(!dismissed));
+  document.getElementById('intro-dismiss').addEventListener('click', async () => {
+    intro.hidden = true;
+    helpBtn.setAttribute('aria-expanded', 'false');
+    helpBtn.focus();
+    try { await chrome.storage.local.set({ introDismissed: true }); } catch { /* ignore */ }
+  });
+  helpBtn.addEventListener('click', () => {
+    intro.hidden = !intro.hidden;
+    helpBtn.setAttribute('aria-expanded', String(!intro.hidden));
+    if (!intro.hidden) intro.scrollIntoView({ block: 'nearest' });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  await setupIntro();
   await refreshDashboard();
 
-  document.getElementById('protect-all-btn').addEventListener('click', () => setMitigation('RECOMMENDED', true));
-  document.getElementById('reset-all-btn').addEventListener('click', () => setMitigation('ALL', false));
+  document.getElementById('protect-all-btn').addEventListener('click', () => { hideUndo(); setMitigation('RECOMMENDED', true); });
+  document.getElementById('reset-all-btn').addEventListener('click', turnAllOff);
+  document.getElementById('undo-btn').addEventListener('click', undoTurnAllOff);
   document.getElementById('open-sandbox-btn').addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('sandbox/test-lab.html') });
   });

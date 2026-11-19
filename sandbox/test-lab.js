@@ -59,8 +59,8 @@ function runCanvasProbe() {
     ? 'Yes (scripts cannot tell noise is being added)'
     : 'No — values changed between reads');
   setText('canvas-status-out', currentMitigations.canvas
-    ? '🛡️ Noise added: this hash is new on every page load'
-    : '⚠️ Raw hardware signature exposed: same hash every visit');
+    ? '🛡️ Protected: the code changes on every visit'
+    : '⚠️ Not protected: the same code every visit identifies your computer');
 }
 
 // ---------------------------------------------------------------------------

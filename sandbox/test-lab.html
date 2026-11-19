@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PrintShield Study Test Lab — CS-550</title>
+  <title>PrintShield Test Lab</title>
   <link rel="stylesheet" href="test-lab.css">
 </head>
 <body>
@@ -11,22 +11,23 @@
     <header class="lab-header">
       <div>
         <span class="course-badge">CS-550 User Study Environment</span>
-        <h1>Digital Fingerprinting Interactive Test Lab</h1>
+        <h1>Fingerprinting Test Lab</h1>
         <p class="subtitle">
-          Compare what websites and trackers can see about your browser <strong>before</strong> and <strong>after</strong> enabling PrintShield mitigations.
+          This page runs the same tests that tracking websites use to recognize your browser without cookies.
+          Compare what they see <strong>before</strong> and <strong>after</strong> you turn on PrintShield.
         </p>
       </div>
       <div class="header-actions">
-        <button id="run-all-probes" class="btn primary-btn">Run All Fingerprint Probes</button>
+        <button id="run-all-probes" class="btn primary-btn">Run all tests again</button>
       </div>
     </header>
 
     <section class="instructions-banner">
-      <h2>📋 Study Walkthrough Steps</h2>
+      <h2>📋 Try it in three steps</h2>
       <ol>
-        <li><strong>Task 1 (Inspect):</strong> Click <em>"Run All Fingerprint Probes"</em>, then open the <strong>PrintShield extension popup</strong> to see which vectors were detected and the live activity feed.</li>
-        <li><strong>Task 2 (Learn):</strong> In the popup, click <em>"Why this matters"</em> on each vector to read what it reveals and why it makes you unique.</li>
-        <li><strong>Task 3 (Mitigate &amp; Compare):</strong> Click <em>Recommended Shield</em> in the popup, then reload this page. Notice that your <strong>Combined Fingerprint ID</strong> now changes on every reload, and that hardware values become common ones.</li>
+        <li><strong>Task 1 (See):</strong> The tests below ran when this page opened. Click the <strong>PrintShield icon</strong> in your toolbar to see which details this page checked.</li>
+        <li><strong>Task 2 (Learn):</strong> In the popup, click <em>"Learn more"</em> on any item to read what it reveals and why it can identify you.</li>
+        <li><strong>Task 3 (Mitigate &amp; Compare):</strong> Click <em>Turn on protection</em> in the popup, then reload this page. Your <strong>Fingerprint ID</strong> now changes on every reload, so trackers can no longer recognize you, and your hardware details become common ones.</li>
       </ol>
     </section>
 
@@ -35,18 +36,18 @@
       <div class="card-header">
         <div>
           <span class="focus-pill">Summary</span>
-          <h3>Combined Fingerprint ID</h3>
+          <h3>Your Fingerprint ID</h3>
         </div>
         <span id="shield-status" class="status-chip">Checking protection…</span>
       </div>
       <p class="card-desc">
-        Trackers combine every value below into one ID. Without protection this ID stays the <strong>same</strong> across reloads, private windows and cleared cookies.
-        With PrintShield, stable values become common ones and rendering outputs get per-visit noise, so the ID <strong>changes on every page load</strong> and cannot follow you.
+        Trackers combine every detail below into one ID. Without protection this ID stays the <strong>same</strong> after reloading, in private windows and after clearing cookies, so it can follow you.
+        With PrintShield, details become common ones and the drawing and sound tests change slightly on each visit, so the ID <strong>changes every time</strong> and cannot follow you.
       </p>
       <div class="readout-box">
         <div class="readout-row">
           <span class="label">This visit's ID:</span>
-          <code id="combined-id-out" class="value highlight big-id">Not probed yet</code>
+          <code id="combined-id-out" class="value highlight big-id">Not tested yet</code>
         </div>
         <div class="readout-row">
           <span class="label">Previous visit's ID:</span>
@@ -64,19 +65,19 @@
       <article class="lab-card priority-card">
         <div class="card-header">
           <div>
-            <span class="focus-pill">Core Vector #1</span>
-            <h3>Canvas Image Rendering</h3>
+            <span class="focus-pill">High risk</span>
+            <h3>Hidden drawing test <span class="tech-name">Canvas</span></h3>
           </div>
-          <button id="probe-canvas-btn" class="btn secondary-btn">Probe Canvas</button>
+          <button id="probe-canvas-btn" class="btn secondary-btn" type="button">Run test</button>
         </div>
         <p class="card-desc">
-          Trackers draw hidden text, gradients and emoji onto a canvas and hash the pixels from <code>canvas.toDataURL()</code>.
+          Sites secretly draw text and shapes, then turn the picture into a short code. Tiny differences in how your computer draws make the code unique.
         </p>
         <div class="canvas-preview-wrap">
           <canvas id="fp-canvas" width="280" height="60"></canvas>
         </div>
         <div class="readout-box">
-          <div class="readout-row"><span class="label">Canvas hash:</span><code id="canvas-hash-out" class="value highlight">Not probed yet</code></div>
+          <div class="readout-row"><span class="label">Drawing code:</span><code id="canvas-hash-out" class="value highlight">Not tested yet</code></div>
           <div class="readout-row"><span class="label">Read twice, same result?</span><span id="canvas-stable-out" class="value">—</span></div>
           <div class="readout-row"><span class="label">Protection:</span><span id="canvas-status-out" class="value">—</span></div>
         </div>
@@ -86,21 +87,21 @@
       <article class="lab-card priority-card">
         <div class="card-header">
           <div>
-            <span class="focus-pill">Core Vector #2</span>
-            <h3>Browser Identity &amp; Hardware</h3>
+            <span class="focus-pill">High risk</span>
+            <h3>Browser &amp; device details <span class="tech-name">User agent</span></h3>
           </div>
-          <button id="probe-ua-btn" class="btn secondary-btn">Probe Navigator</button>
+          <button id="probe-ua-btn" class="btn secondary-btn" type="button">Run test</button>
         </div>
         <p class="card-desc">
-          Trackers read <code>navigator.userAgent</code>, CPU cores, memory, languages and detailed Client Hints.
+          Your browser version, system, processor cores, memory and languages.
         </p>
         <div class="readout-box">
-          <div class="readout-row"><span class="label">User-Agent:</span><code id="ua-string-out" class="value small-code">Not probed yet</code></div>
+          <div class="readout-row"><span class="label">User-Agent:</span><code id="ua-string-out" class="value small-code">Not tested yet</code></div>
           <div class="readout-row"><span class="label">Platform:</span><code id="ua-platform-out" class="value">—</code></div>
           <div class="readout-row"><span class="label">CPU cores &amp; RAM:</span><code id="ua-hw-out" class="value">—</code></div>
           <div class="readout-row"><span class="label">Languages:</span><code id="ua-lang-out" class="value">—</code></div>
-          <div class="readout-row"><span class="label">OS build (Client Hints):</span><code id="ua-hints-out" class="value small-code">—</code></div>
-          <div class="readout-row"><span class="label">Navigator properties:</span><code id="ua-props-out" class="value">—</code></div>
+          <div class="readout-row"><span class="label">Detailed system version:</span><code id="ua-hints-out" class="value small-code">—</code></div>
+          <div class="readout-row"><span class="label">Browser features listed:</span><code id="ua-props-out" class="value">—</code></div>
         </div>
       </article>
 
@@ -108,14 +109,13 @@
       <article class="lab-card">
         <div class="card-header">
           <div>
-            <span class="focus-pill passive-pill">Passive</span>
-            <h3>HTTP Request Headers</h3>
+            <span class="focus-pill passive-pill">Automatic</span>
+            <h3>Info sent with every request <span class="tech-name">HTTP headers</span></h3>
           </div>
         </div>
         <p class="card-desc">
-          Headers are sent with <em>every</em> request, so the server sees them without running any script and the page cannot show them to you.
-          PrintShield's <strong>HTTP Headers</strong> shield sends the most common <code>Accept</code> value and strips detailed Client Hints;
-          the <strong>Browser Identity</strong> shield aligns the <code>User-Agent</code> and <code>Accept-Language</code> headers with the JavaScript values above.
+          Your browser attaches these notes to <em>every</em> request, so the website gets them before the page even loads, and this page cannot show them to you.
+          PrintShield sends the most common version of them and removes detailed extras.
         </p>
         <div class="readout-box">
           <div class="readout-row"><span class="label">Language header would be:</span><code id="headers-lang-out" class="value">—</code></div>
@@ -125,30 +125,30 @@
       <!-- WebGL -->
       <article class="lab-card">
         <div class="card-header">
-          <h3>WebGL &amp; Graphics Card</h3>
-          <button id="probe-webgl-btn" class="btn secondary-btn">Probe WebGL</button>
+          <h3>Graphics card <span class="tech-name">WebGL</span></h3>
+          <button id="probe-webgl-btn" class="btn secondary-btn" type="button">Run test</button>
         </div>
         <p class="card-desc">
-          Reads <code>UNMASKED_RENDERER_WEBGL</code>, hardware limits and the extension list to identify your exact GPU.
+          Reads the brand and model of your graphics card and its technical limits.
         </p>
         <div class="readout-box">
-          <div class="readout-row"><span class="label">GPU vendor:</span><code id="webgl-vendor-out" class="value">Not probed yet</code></div>
+          <div class="readout-row"><span class="label">GPU vendor:</span><code id="webgl-vendor-out" class="value">Not tested yet</code></div>
           <div class="readout-row"><span class="label">GPU renderer:</span><code id="webgl-renderer-out" class="value small-code">—</code></div>
-          <div class="readout-row"><span class="label">Extensions / max texture:</span><code id="webgl-params-out" class="value">—</code></div>
+          <div class="readout-row"><span class="label">Features / largest image size:</span><code id="webgl-params-out" class="value">—</code></div>
         </div>
       </article>
 
       <!-- Fonts -->
       <article class="lab-card">
         <div class="card-header">
-          <h3>Installed Fonts</h3>
-          <button id="probe-fonts-btn" class="btn secondary-btn">Probe Fonts</button>
+          <h3>Installed fonts</h3>
+          <button id="probe-fonts-btn" class="btn secondary-btn" type="button">Run test</button>
         </div>
         <p class="card-desc">
-          Measures text in each font against a fallback font, the same way amiunique.org builds its font list. Fonts added by Office or Adobe stand out.
+          Tests which fonts your computer has. Fonts added by apps like Office or Adobe make you stand out.
         </p>
         <div class="readout-box">
-          <div class="readout-row"><span class="label">Fonts detected:</span><code id="fonts-count-out" class="value highlight">Not probed yet</code></div>
+          <div class="readout-row"><span class="label">Fonts detected:</span><code id="fonts-count-out" class="value highlight">Not tested yet</code></div>
           <div id="fonts-list-out" class="font-chips"></div>
         </div>
       </article>
@@ -156,26 +156,26 @@
       <!-- Audio -->
       <article class="lab-card">
         <div class="card-header">
-          <h3>Web Audio Processing</h3>
-          <button id="probe-audio-btn" class="btn secondary-btn">Probe Audio</button>
+          <h3>Hidden sound test <span class="tech-name">Web Audio</span></h3>
+          <button id="probe-audio-btn" class="btn secondary-btn" type="button">Run test</button>
         </div>
         <p class="card-desc">
-          Renders a silent oscillator through a compressor in an <code>OfflineAudioContext</code> and sums the samples (the classic audio fingerprint).
+          Creates a sound without playing it and turns the result into a number. Tiny differences between computers make the number unique.
         </p>
         <div class="readout-box">
-          <div class="readout-row"><span class="label">Audio fingerprint:</span><code id="audio-hash-out" class="value highlight">Not probed yet</code></div>
+          <div class="readout-row"><span class="label">Sound test result:</span><code id="audio-hash-out" class="value highlight">Not tested yet</code></div>
         </div>
       </article>
 
       <!-- Screen -->
       <article class="lab-card">
         <div class="card-header">
-          <h3>Screen Size &amp; Position</h3>
-          <button id="probe-screen-btn" class="btn secondary-btn">Probe Screen</button>
+          <h3>Screen size</h3>
+          <button id="probe-screen-btn" class="btn secondary-btn" type="button">Run test</button>
         </div>
-        <p class="card-desc">Reads your monitor resolution, usable area (minus taskbar), color depth and window position.</p>
+        <p class="card-desc">Reads your screen size, the space left after your taskbar, and where your window sits.</p>
         <div class="readout-box">
-          <div class="readout-row"><span class="label">Screen:</span><code id="screen-size-out" class="value">Not probed yet</code></div>
+          <div class="readout-row"><span class="label">Screen:</span><code id="screen-size-out" class="value">Not tested yet</code></div>
           <div class="readout-row"><span class="label">Available area:</span><code id="screen-avail-out" class="value">—</code></div>
           <div class="readout-row"><span class="label">Color depth / window position:</span><code id="screen-misc-out" class="value">—</code></div>
         </div>
@@ -184,12 +184,12 @@
       <!-- Time zone -->
       <article class="lab-card">
         <div class="card-header">
-          <h3>Time Zone</h3>
-          <button id="probe-tz-btn" class="btn secondary-btn">Probe Time Zone</button>
+          <h3>Time zone</h3>
+          <button id="probe-tz-btn" class="btn secondary-btn" type="button">Run test</button>
         </div>
-        <p class="card-desc">Reads your time-zone offset and name, which reveal your approximate region.</p>
+        <p class="card-desc">Reads your time zone, which reveals roughly where you live.</p>
         <div class="readout-box">
-          <div class="readout-row"><span class="label">Offset / name:</span><code id="tz-out" class="value">Not probed yet</code></div>
+          <div class="readout-row"><span class="label">Offset / name:</span><code id="tz-out" class="value">Not tested yet</code></div>
           <div class="readout-row"><span class="label">Local time as seen by sites:</span><code id="tz-time-out" class="value small-code">—</code></div>
         </div>
       </article>
@@ -197,12 +197,12 @@
       <!-- Battery & network -->
       <article class="lab-card">
         <div class="card-header">
-          <h3>Battery &amp; Network</h3>
-          <button id="probe-battery-btn" class="btn secondary-btn">Probe Battery &amp; Network</button>
+          <h3>Battery &amp; internet connection</h3>
+          <button id="probe-battery-btn" class="btn secondary-btn" type="button">Run test</button>
         </div>
-        <p class="card-desc">Exact battery level and connection estimates can link visits across sites for minutes at a time.</p>
+        <p class="card-desc">Your exact battery level and connection speed can link your visits to different sites for a few minutes.</p>
         <div class="readout-box">
-          <div class="readout-row"><span class="label">Battery:</span><code id="battery-out" class="value">Not probed yet</code></div>
+          <div class="readout-row"><span class="label">Battery:</span><code id="battery-out" class="value">Not tested yet</code></div>
           <div class="readout-row"><span class="label">Connection:</span><code id="network-out" class="value">—</code></div>
         </div>
       </article>
@@ -210,12 +210,12 @@
       <!-- Keyboard & devices -->
       <article class="lab-card">
         <div class="card-header">
-          <h3>Keyboard &amp; Media Devices</h3>
-          <button id="probe-devices-btn" class="btn secondary-btn">Probe Devices</button>
+          <h3>Keyboard, camera &amp; mic</h3>
+          <button id="probe-devices-btn" class="btn secondary-btn" type="button">Run test</button>
         </div>
-        <p class="card-desc">Keyboard layout hints at your language and region; device counts reveal your hardware setup.</p>
+        <p class="card-desc">Your keyboard layout hints at your language and country. The number of cameras and microphones describes your setup.</p>
         <div class="readout-box">
-          <div class="readout-row"><span class="label">Keyboard layout:</span><code id="keyboard-out" class="value">Not probed yet</code></div>
+          <div class="readout-row"><span class="label">Keyboard layout:</span><code id="keyboard-out" class="value">Not tested yet</code></div>
           <div class="readout-row"><span class="label">Media devices:</span><code id="media-out" class="value">—</code></div>
         </div>
       </article>

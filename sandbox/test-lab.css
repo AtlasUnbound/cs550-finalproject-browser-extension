@@ -264,3 +264,20 @@ canvas {
     flex-direction: column;
   }
 }
+
+.tech-name {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.7em;
+  font-weight: 500;
+  opacity: 0.65;
+}
+
+:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

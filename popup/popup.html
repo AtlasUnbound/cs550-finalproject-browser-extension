@@ -9,89 +9,105 @@
 <body>
   <header class="app-header">
     <div class="brand">
-      <img src="../icons/icon-48.png" alt="PrintShield Logo" class="brand-icon" width="28" height="28">
+      <img src="../icons/icon-48.png" alt="" class="brand-icon" width="28" height="28">
       <div>
         <h1 class="brand-title">PrintShield</h1>
-        <p class="brand-subtitle" id="active-domain">Inspecting current tab...</p>
+        <p class="brand-subtitle" id="active-domain">Checking this tab…</p>
       </div>
     </div>
-    <button id="open-sandbox-btn" class="sandbox-btn" title="Open interactive fingerprinting test page">
-      Test Lab
-    </button>
+    <div class="header-actions">
+      <button id="help-btn" class="icon-btn" type="button" aria-controls="intro" title="What is browser fingerprinting?" aria-label="Help: what is browser fingerprinting?">?</button>
+      <button id="open-sandbox-btn" class="sandbox-btn" type="button" title="Open a practice page that shows what websites can learn about your browser">
+        Test Lab
+      </button>
+    </div>
   </header>
 
-  <!-- Dynamic Visual Privacy Metric (Task 1 & Task 3) -->
-  <section class="metric-card" aria-label="Privacy Protection Metric">
-    <div class="metric-ring-container">
-      <svg class="metric-ring" width="84" height="84" viewBox="0 0 84 84">
+  <!-- First-run introduction (Human-Centered Design: explain the concept before asking for action) -->
+  <section id="intro" class="intro-card" aria-labelledby="intro-title" hidden>
+    <h2 id="intro-title">What is browser fingerprinting?</h2>
+    <p>Websites can recognize your browser <strong>without cookies</strong> by collecting small details about it, like your screen size, fonts and graphics card. Together these details form a <strong>fingerprint</strong> that can follow you from site to site, even in a private window.</p>
+    <p>PrintShield shows which details each page checks, and makes yours look like everyone else's so you blend into the crowd.</p>
+    <ol>
+      <li>Click <strong>Turn on protection</strong>.</li>
+      <li>Reload the page you are on.</li>
+      <li>Click <strong>Learn more</strong> on any item to see what it reveals.</li>
+    </ol>
+    <button id="intro-dismiss" class="action-btn primary-btn" type="button">Got it</button>
+  </section>
+
+  <section class="metric-card" aria-label="Protection level">
+    <div class="metric-ring-container" role="img" aria-label="Protection level: 0 percent">
+      <svg class="metric-ring" width="84" height="84" viewBox="0 0 84 84" aria-hidden="true">
         <circle class="metric-ring-bg" cx="42" cy="42" r="35" stroke-width="8" fill="none"></circle>
         <circle id="metric-ring-progress" class="metric-ring-fill" cx="42" cy="42" r="35" stroke-width="8" fill="none"
           stroke-dasharray="219.91" stroke-dashoffset="219.91"></circle>
       </svg>
-      <div class="metric-score-text">
+      <div class="metric-score-text" aria-hidden="true">
         <span id="score-value">0</span><span class="score-percent">%</span>
       </div>
     </div>
 
     <div class="metric-details">
       <div class="metric-status-row">
-        <span class="metric-label">Footprint Protection</span>
-        <span id="protection-badge" class="status-pill status-low">High Exposure</span>
+        <span class="metric-label">Protection level</span>
+        <span id="protection-badge" class="status-pill status-low" aria-live="polite">Not protected</span>
       </div>
       <p id="metric-explanation" class="metric-desc">
-        Your browser currently shares unique hardware and rendering signatures with websites.
+        Websites can combine details about your computer into an ID that follows you, even without cookies.
       </p>
+      <p class="metric-note">Higher means more protections are on. The most revealing details count the most.</p>
       <div class="quick-actions">
-        <button id="protect-all-btn" class="action-btn primary-btn" title="Turn on every protection">Recommended Shield</button>
-        <button id="reset-all-btn" class="action-btn ghost-btn">Reset</button>
+        <button id="protect-all-btn" class="action-btn primary-btn" type="button" title="Turn on every recommended protection">Turn on protection</button>
+        <button id="reset-all-btn" class="action-btn ghost-btn" type="button" title="Turn every protection off. You can undo this.">Turn all off</button>
       </div>
     </div>
   </section>
 
-  <div id="page-alert" class="page-alert" role="status" hidden></div>
-
-  <!-- Study Guidance Banner -->
-  <div class="study-tip" role="note">
-    <span class="study-tip-icon">💡</span>
-    <span><strong>The goal is to blend in, not to hide.</strong> PrintShield reports the most common values so your browser looks like thousands of others. Click <em>"Why this matters"</em> on any vector to learn more.</span>
+  <div id="undo-bar" class="notice-bar undo-bar" role="status" hidden>
+    <span>All protections are off.</span>
+    <button id="undo-btn" type="button" class="notice-btn">Undo</button>
   </div>
 
-  <!-- Fingerprinting Vectors List (Task 1, Task 2, Task 3) -->
+  <div id="reload-notice" class="notice-bar reload-notice" role="status" hidden>
+    <span>↻ Reload this page so your changes take effect.</span>
+    <button id="reload-tab-btn" type="button" class="notice-btn">Reload page</button>
+  </div>
+
+  <div id="page-alert" class="page-alert" role="status" hidden></div>
+
   <main class="vectors-section">
     <div class="section-header">
-      <h2>Fingerprinting Vectors</h2>
-      <span id="detected-summary" class="detected-counter">0 read on this page</span>
+      <h2>What websites can learn about you</h2>
+      <span id="detected-summary" class="detected-counter">0 checked by this page</span>
     </div>
+    <p class="section-hint">Each switch protects one kind of detail. Green means protected.</p>
 
     <div id="vectors-container" class="vectors-list">
       <!-- Populated dynamically by popup.js -->
     </div>
   </main>
 
+  <section class="activity-section" aria-label="What this page has checked">
+    <div class="section-header">
+      <h2>What this page checked, live</h2>
+    </div>
+    <ul id="activity-feed" class="activity-feed" aria-live="polite"></ul>
+  </section>
+
   <details class="results-guide">
-    <summary>📊 Reading your amiunique.org / Cover Your Tracks results</summary>
+    <summary>📊 For testers: reading amiunique.org and Cover Your Tracks results</summary>
     <ul>
-      <li><strong>"Unique" canvas, WebGL data and audio values are expected.</strong> With protection on they change on every visit, so they can never be matched again. Cover Your Tracks labels them "randomized".</li>
-      <li><strong>amiunique.org compares you with years of past visitors.</strong> Anything tied to a brand-new browser version, such as the user agent, the navigator property list and WebGL extensions, looks rare there until more people update. Cover Your Tracks only uses recent visitors.</li>
-      <li><strong>The two sites disagree on some values.</strong> A UTC time zone, for example, is common on amiunique.org but rare on Cover Your Tracks. PrintShield aims for values that are common in real browsers today.</li>
-      <li><strong>Open the test from the address bar, not from a Google result,</strong> and don't reload it: reloads and revisits add cache headers (If-None-Match, Cache-Control) that no extension can remove.</li>
-      <li><strong>Reload the test page after changing settings,</strong> because some protections apply only to pages loaded afterwards. Headers like "Cache-Control" appear only because you reloaded.</li>
+      <li><strong>Some values will always look "unique", and that is expected.</strong> The hidden drawing, 3D image and sound tests change on every visit when protected, so they can never be matched again. Cover Your Tracks labels them "randomized".</li>
+      <li><strong>amiunique.org compares you with years of past visitors.</strong> A brand-new browser version looks rare there until more people update. Cover Your Tracks only uses recent visitors.</li>
+      <li><strong>The two sites can disagree.</strong> A UTC time zone, for example, is common on amiunique.org but rare on Cover Your Tracks. PrintShield aims for values that are common in real browsers today.</li>
+      <li><strong>Type the test site's address yourself</strong> instead of opening it from a Google result, and don't reload it. Reloads and revisits add cache details that no extension can remove.</li>
+      <li><strong>Reload the test page after changing settings,</strong> because some protections only apply to pages loaded afterwards.</li>
     </ul>
   </details>
 
-  <section class="activity-section" aria-label="Live fingerprinting activity on this page">
-    <div class="section-header">
-      <h2>Live Activity on This Page</h2>
-    </div>
-    <ul id="activity-feed" class="activity-feed"></ul>
-  </section>
-
   <footer class="app-footer">
     <span>CS-550 Privacy Research Project</span>
-    <span id="reload-notice" class="reload-notice" hidden>
-      Some changes need a reload
-      <button id="reload-tab-btn" type="button" class="reload-btn">Reload tab</button>
-    </span>
   </footer>
 
   <script src="popup.js"></script>
